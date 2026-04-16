@@ -40,26 +40,46 @@
   font-size: 10px;
 }
 
-/* Inline mini bar */
+/* Inline mini bar — rounded pill with border and glow */
 .cm-mini-bar {
-  width: 40px;
-  height: 3px;
-  background: var(--cm-track, rgba(255,255,255,0.1));
-  border-radius: 2px;
-  overflow: hidden;
+  width: 48px;
+  height: 8px;
+  background: transparent;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.5);
   display: inline-block;
   vertical-align: middle;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 4px rgba(255,255,255,0.15);
+}
+
+/* 50% tick mark */
+.cm-mini-bar::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,0.25);
+  z-index: 1;
 }
 
 .cm-mini-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 4px;
   transition: width 0.3s ease;
 }
 
-.cm-mini-fill--tokens { background: #7c6bd4; }
-.cm-mini-fill--session { background: #d4956b; }
-.cm-mini-fill--weekly { background: #6bd49a; }
+.cm-mini-fill--tokens {
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 0 6px rgba(255,255,255,0.4);
+}
+.cm-mini-fill--session {
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 0 6px rgba(255,255,255,0.4);
+}
 
 /* Alert colors */
 .cm-alert-warning { color: #d4c56b !important; }
@@ -103,4 +123,21 @@ html[data-theme="light"] .cm-strip {
   --cm-track: rgba(0,0,0,0.08);
   --cm-text: #333;
   --cm-text-muted: #666;
+}
+
+html[data-mode="light"] .cm-mini-bar,
+html[data-theme="light"] .cm-mini-bar {
+  border-color: rgba(0,0,0,0.4);
+  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+}
+
+html[data-mode="light"] .cm-mini-bar::after,
+html[data-theme="light"] .cm-mini-bar::after {
+  background: rgba(0,0,0,0.2);
+}
+
+html[data-mode="light"] .cm-mini-fill,
+html[data-theme="light"] .cm-mini-fill {
+  background: rgba(0,0,0,0.7) !important;
+  box-shadow: none !important;
 }
