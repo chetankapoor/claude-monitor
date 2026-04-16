@@ -8,6 +8,7 @@
     "watch": "node esbuild.config.js --watch"
   },
   "devDependencies": {
+    "canvas": "^3.2.3",
     "esbuild": "^0.25.0"
   },
   "license": "MIT",
