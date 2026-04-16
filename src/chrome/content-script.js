@@ -26,38 +26,35 @@ function injectBarStrip() {
 
   const strip = getBarStripElement() || createBarStrip();
 
-  // Find the toolbar row that contains + and Opus 4.7
-  // The model-selector-dropdown is inside the right side of the toolbar
+  // Find the + button and model selector — they share a common ancestor toolbar row
+  const fileUpload = document.querySelector('[data-testid="file-upload"]');
   const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
-  if (modelSelector) {
-    // Walk up to find the flex row that is the toolbar
-    let toolbarRow = modelSelector.parentElement;
+
+  if (fileUpload && modelSelector) {
+    // Find their lowest common ancestor — that's the toolbar row
+    const fileAncestors = [];
+    let el = fileUpload;
+    while (el) { fileAncestors.push(el); el = el.parentElement; }
+
+    let toolbarRow = modelSelector;
     while (toolbarRow) {
-      const cs = window.getComputedStyle(toolbarRow);
-      // The toolbar row is a flex container with justify-content that has both + and model selector
-      if (cs.display === 'flex' && toolbarRow.querySelector('[data-testid="file-upload"]')) {
-        break;
-      }
+      if (fileAncestors.includes(toolbarRow)) break;
       toolbarRow = toolbarRow.parentElement;
     }
 
     if (toolbarRow) {
-      // Find the right-side group (contains model selector, audio button, etc.)
-      // Insert strip as a child of the toolbar, pushed to center via CSS
-      // Find the first child that contains the model selector (right group)
+      // Find the direct child of toolbarRow that contains the model selector (right group)
       let rightGroup = modelSelector;
       while (rightGroup.parentElement !== toolbarRow) {
         rightGroup = rightGroup.parentElement;
       }
 
-      // Create a spacer that pushes the strip to center
-      const spacer = document.createElement('div');
-      spacer.style.flex = '1';
-      spacer.id = 'cm-spacer';
-
-      // Insert: [+ button] [spacer] [STRIP] [right group with Opus]
-      toolbarRow.insertBefore(spacer, rightGroup);
+      // Insert strip right before the right group
       toolbarRow.insertBefore(strip, rightGroup);
+
+      // Make strip fill the middle space
+      strip.style.flex = '1';
+      strip.style.justifyContent = 'center';
 
       stripInjected = true;
       renderAll();
@@ -83,12 +80,10 @@ function renderAll() {
   const usage = getUsageState();
   const tokens = getTokenState();
   const model = getModelState();
-  const budget = getBudgetState();
-  const history = getHistoryState();
 
   updateTokens(tokens.estimatedTokens, model.contextLimit);
   updateSession(usage.session.utilization);
-  updateCost(usage.session.utilization, usage.weekly.utilization);
+  updateCost(tokens.estimatedCostUSD);
   updateResetCountdown(usage.session.resetsAt);
 }
 
@@ -158,7 +153,6 @@ async function init() {
 
   onUsageChange((usage) => {
     updateSession(usage.session.utilization);
-    updateCost(usage.session.utilization, usage.weekly.utilization);
     updateResetCountdown(usage.session.resetsAt);
 
     if (usage.session.resetsAt) {
@@ -180,6 +174,7 @@ async function init() {
   onTokenChange((tokens) => {
     const model = getModelState();
     updateTokens(tokens.estimatedTokens, model.contextLimit);
+    updateCost(tokens.estimatedCostUSD);
   });
 
   onModelChange((model) => {

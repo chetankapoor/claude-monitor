@@ -148,10 +148,15 @@ export function updateBudget(enabled, currentUsage, monthlyBudget, alertLevel) {
   );
 }
 
-export function updateCost(sessionUtilization, weeklyUtilization) {
+export function updateCost(estimatedCostUSD) {
   if (!els.costValue) return;
-  // Show weekly utilization as "cost" — percentage of plan used
-  els.costValue.textContent = weeklyUtilization + '%';
+  if (estimatedCostUSD <= 0) {
+    els.costValue.textContent = '$0.00';
+  } else if (estimatedCostUSD < 0.01) {
+    els.costValue.textContent = '<$0.01';
+  } else {
+    els.costValue.textContent = '$' + estimatedCostUSD.toFixed(2);
+  }
 }
 
 export function markResponseReceived() {
