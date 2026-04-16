@@ -26,18 +26,47 @@ function injectBarStrip() {
 
   const strip = getBarStripElement() || createBarStrip();
 
-  // Strategy 1: Insert INSIDE the toolbar row, between + button and Opus selector
+  // Find the toolbar row that contains + and Opus 4.7
+  // The model-selector-dropdown is inside the right side of the toolbar
   const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
   if (modelSelector) {
-    // Insert right before the model selector
-    modelSelector.parentElement.insertBefore(strip, modelSelector);
-    stripInjected = true;
-    renderAll();
-    console.log('[ClaudeMonitor] Strip injected in toolbar row');
-    return;
+    // Walk up to find the flex row that is the toolbar
+    let toolbarRow = modelSelector.parentElement;
+    while (toolbarRow) {
+      const cs = window.getComputedStyle(toolbarRow);
+      // The toolbar row is a flex container with justify-content that has both + and model selector
+      if (cs.display === 'flex' && toolbarRow.querySelector('[data-testid="file-upload"]')) {
+        break;
+      }
+      toolbarRow = toolbarRow.parentElement;
+    }
+
+    if (toolbarRow) {
+      // Find the right-side group (contains model selector, audio button, etc.)
+      // Insert strip as a child of the toolbar, pushed to center via CSS
+      // Find the first child that contains the model selector (right group)
+      let rightGroup = modelSelector;
+      while (rightGroup.parentElement !== toolbarRow) {
+        rightGroup = rightGroup.parentElement;
+      }
+
+      // Create a spacer that pushes the strip to center
+      const spacer = document.createElement('div');
+      spacer.style.flex = '1';
+      spacer.id = 'cm-spacer';
+
+      // Insert: [+ button] [spacer] [STRIP] [right group with Opus]
+      toolbarRow.insertBefore(spacer, rightGroup);
+      toolbarRow.insertBefore(strip, rightGroup);
+
+      stripInjected = true;
+      renderAll();
+      console.log('[ClaudeMonitor] Strip injected in toolbar between + and Opus');
+      return;
+    }
   }
 
-  // Strategy 2: Find chat-input and insert after it
+  // Fallback: insert after chat-input
   const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
   if (chatInput) {
     chatInput.after(strip);
@@ -67,6 +96,9 @@ function observeStripRemoval() {
   const observer = new MutationObserver(() => {
     if (!document.getElementById('claude-monitor-strip')) {
       stripInjected = false;
+      // Also remove orphaned spacer
+      const spacer = document.getElementById('cm-spacer');
+      if (spacer) spacer.remove();
       injectBarStrip();
     }
   });
