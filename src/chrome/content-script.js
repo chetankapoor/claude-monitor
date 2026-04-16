@@ -23,33 +23,49 @@ let stripInjected = false;
 function injectBarStrip() {
   if (stripInjected && document.getElementById('claude-monitor-strip')) return;
 
-  const inputGrid = document.querySelector(SELECTORS.CHAT_INPUT_GRID);
-  if (!inputGrid) return;
+  // Strategy 1: Find chat-input div and insert before it
+  const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
+  if (chatInput) {
+    const strip = getBarStripElement() || createBarStrip();
+    chatInput.parentElement.insertBefore(strip, chatInput);
+    stripInjected = true;
+    renderAll();
+    console.log('[ClaudeMonitor] Bar strip injected above chat input');
+    return;
+  }
 
+  // Strategy 2: Find model selector and insert before its container
   const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
-  let anchor = null;
-
   if (modelSelector) {
-    let el = modelSelector.parentElement;
-    while (el && el !== inputGrid) {
-      const style = window.getComputedStyle(el);
-      if (style.display === 'flex' && el.children.length > 1) {
-        anchor = el;
-        break;
-      }
-      el = el.parentElement;
+    let anchor = modelSelector;
+    // Walk up to find a reasonable container
+    for (let i = 0; i < 5; i++) {
+      if (anchor.parentElement) anchor = anchor.parentElement;
     }
+    const strip = getBarStripElement() || createBarStrip();
+    anchor.parentElement.insertBefore(strip, anchor);
+    stripInjected = true;
+    renderAll();
+    console.log('[ClaudeMonitor] Bar strip injected near model selector');
+    return;
   }
 
-  if (!anchor) {
-    anchor = inputGrid;
+  // Strategy 3: Find the ProseMirror editor
+  const editor = document.querySelector('.ProseMirror, .tiptap');
+  if (editor) {
+    let container = editor;
+    for (let i = 0; i < 5; i++) {
+      if (container.parentElement) container = container.parentElement;
+    }
+    const strip = getBarStripElement() || createBarStrip();
+    container.parentElement.insertBefore(strip, container);
+    stripInjected = true;
+    renderAll();
+    console.log('[ClaudeMonitor] Bar strip injected near editor');
+    return;
   }
 
-  const strip = getBarStripElement() || createBarStrip();
-  anchor.parentElement.insertBefore(strip, anchor);
-  stripInjected = true;
-
-  renderAll();
+  console.warn('[ClaudeMonitor] Could not find injection point');
 }
 
 function renderAll() {
@@ -173,7 +189,7 @@ async function init() {
     markResponseReceived();
   });
 
-  await waitForElement(SELECTORS.CHAT_INPUT_GRID);
+  await waitForElement(SELECTORS.CHAT_INPUT);
   injectBarStrip();
 
   observeStripRemoval();
@@ -181,7 +197,7 @@ async function init() {
 
   onBridgeEvent('cm:urlchange', () => {
     setTimeout(async () => {
-      await waitForElement(SELECTORS.CHAT_INPUT_GRID, 10000);
+      await waitForElement(SELECTORS.CHAT_INPUT, 10000);
       injectBarStrip();
     }, 500);
   });

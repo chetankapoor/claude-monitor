@@ -1,6 +1,6 @@
 // DOM selectors used to find injection points on claude.ai
 export const SELECTORS = {
-  CHAT_INPUT_GRID: '[data-testid="chat-input-grid-container"], [data-testid="chat-input-grid-area"]',
+  CHAT_INPUT: '[data-testid="chat-input"]',
   MODEL_SELECTOR: '[data-testid="model-selector-dropdown"]',
   CHAT_MENU_TRIGGER: '[data-testid="chat-menu-trigger"]',
 };
