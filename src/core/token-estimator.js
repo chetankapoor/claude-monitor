@@ -6,15 +6,14 @@ const MODEL_PRICING = {
   'opus':   { input: 15,    output: 75 },
   'sonnet': { input: 3,     output: 15 },
   'haiku':  { input: 0.25,  output: 1.25 },
-  default:  { input: 3,     output: 15 }, // assume Sonnet pricing
+  default:  { input: 3,     output: 15 },
 };
 
 const state = {
   estimatedTokens: 0,
   contextLimit: 200000,
-  // Cumulative session cost tracking
-  totalInputTokens: 0,
-  totalOutputTokens: 0,
+  inputTokens: 0,
+  outputTokens: 0,
   estimatedCostUSD: 0,
   currentModel: 'default',
 };
@@ -47,63 +46,111 @@ function getPricing(model) {
 function recalcCost() {
   const pricing = getPricing(state.currentModel);
   state.estimatedCostUSD =
-    (state.totalInputTokens / 1_000_000) * pricing.input +
-    (state.totalOutputTokens / 1_000_000) * pricing.output;
+    (state.inputTokens / 1_000_000) * pricing.input +
+    (state.outputTokens / 1_000_000) * pricing.output;
 }
 
-function countConversationChars() {
-  const messages = document.querySelectorAll(
-    '[data-testid^="chat-message-"], .font-claude-message, .font-user-message'
+// Count tokens by scanning the DOM — separate user (input) vs Claude (output)
+function countFromDOM() {
+  let inputChars = 0;
+  let outputChars = 0;
+
+  // User messages
+  const userMsgs = document.querySelectorAll(
+    '[data-testid="user-message"], [data-is-human="true"], .font-user-message'
   );
-  let totalChars = 0;
-  for (const msg of messages) {
-    totalChars += (msg.textContent || '').length;
+  for (const msg of userMsgs) {
+    inputChars += (msg.textContent || '').length;
   }
-  return totalChars;
+
+  // Claude messages — everything that's not a user message in the conversation
+  const allMsgs = document.querySelectorAll(
+    '[data-testid^="chat-message-"], .font-claude-message'
+  );
+  for (const msg of allMsgs) {
+    outputChars += (msg.textContent || '').length;
+  }
+
+  // If selectors didn't separate well, try a broader approach
+  if (inputChars === 0 && outputChars === 0) {
+    // Look for the conversation container and split by turn
+    const turns = document.querySelectorAll('[data-testid]');
+    for (const turn of turns) {
+      const testId = turn.getAttribute('data-testid') || '';
+      const text = (turn.textContent || '').length;
+      if (testId.includes('user')) {
+        inputChars += text;
+      } else if (testId.includes('message') && !testId.includes('user')) {
+        outputChars += text;
+      }
+    }
+  }
+
+  // Broader fallback: count all visible conversation text
+  if (inputChars === 0 && outputChars === 0) {
+    const container = document.querySelector('[class*="conversation"], [class*="chat-messages"], main');
+    if (container) {
+      const total = (container.textContent || '').length;
+      // Rough split: ~30% user input, ~70% Claude output
+      inputChars = Math.round(total * 0.3);
+      outputChars = Math.round(total * 0.7);
+    }
+  }
+
+  state.inputTokens = Math.round(inputChars / CHARS_PER_TOKEN);
+  state.outputTokens = Math.round(outputChars / CHARS_PER_TOKEN);
+  state.estimatedTokens = state.inputTokens + state.outputTokens;
+  recalcCost();
 }
 
 export function estimateTokens() {
-  const chars = countConversationChars();
-  state.estimatedTokens = Math.round(chars / CHARS_PER_TOKEN);
+  countFromDOM();
   notifyChange();
   return state.estimatedTokens;
 }
 
-function handleConversationTree(data) {
-  if (!data || !data.chat_messages) return;
-  let totalChars = 0;
-  for (const msg of data.chat_messages) {
-    if (msg.text) totalChars += msg.text.length;
-    if (msg.content) {
-      for (const block of msg.content) {
-        if (block.text) totalChars += block.text.length;
-      }
-    }
-  }
-  state.estimatedTokens = Math.round(totalChars / CHARS_PER_TOKEN);
-  notifyChange();
-}
-
-// message_start gives us input tokens for this turn
+// If API provides actual token counts, use those (more accurate)
 function handleMessageStart(data) {
   if (data?.model) {
     state.currentModel = data.model;
+    recalcCost();
   }
   if (data?.usage?.input_tokens) {
-    state.estimatedTokens = data.usage.input_tokens;
-    state.totalInputTokens += data.usage.input_tokens;
+    state.inputTokens = data.usage.input_tokens;
+    state.estimatedTokens = state.inputTokens + state.outputTokens;
     recalcCost();
     notifyChange();
   }
 }
 
-// message_delta gives us output tokens for this turn
 function handleMessageDelta(data) {
   if (data?.usage?.output_tokens) {
-    state.totalOutputTokens += data.usage.output_tokens;
+    state.outputTokens = data.usage.output_tokens;
+    state.estimatedTokens = state.inputTokens + state.outputTokens;
     recalcCost();
     notifyChange();
   }
+}
+
+function handleConversationTree(data) {
+  if (!data || !data.chat_messages) return;
+  let inputChars = 0;
+  let outputChars = 0;
+  for (const msg of data.chat_messages) {
+    const text = msg.text || '';
+    const contentText = (msg.content || []).map(b => b.text || '').join('');
+    const chars = text.length + contentText.length;
+    if (msg.sender === 'human') {
+      inputChars += chars;
+    } else {
+      outputChars += chars;
+    }
+  }
+  state.inputTokens = Math.round(inputChars / CHARS_PER_TOKEN);
+  state.outputTokens = Math.round(outputChars / CHARS_PER_TOKEN);
+  state.estimatedTokens = state.inputTokens + state.outputTokens;
+  recalcCost();
+  notifyChange();
 }
 
 export function initTokenEstimator() {
@@ -111,6 +158,7 @@ export function initTokenEstimator() {
   onBridgeEvent('cm:message_start', handleMessageStart);
   onBridgeEvent('cm:message_delta', handleMessageDelta);
 
-  setInterval(estimateTokens, 5000);
+  // Recount from DOM every 3 seconds
+  setInterval(estimateTokens, 3000);
   setTimeout(estimateTokens, 1000);
 }
