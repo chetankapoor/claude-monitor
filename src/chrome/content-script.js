@@ -23,45 +23,53 @@ let stripInjected = false;
 function injectBarStrip() {
   if (stripInjected && document.getElementById('claude-monitor-strip')) return;
 
-  // Strategy 1: Find chat-input div and insert before it
-  const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
-  if (chatInput) {
-    const strip = getBarStripElement() || createBarStrip();
-    chatInput.parentElement.insertBefore(strip, chatInput);
-    stripInjected = true;
-    renderAll();
-    console.log('[ClaudeMonitor] Bar strip injected above chat input');
-    return;
-  }
+  const strip = getBarStripElement() || createBarStrip();
 
-  // Strategy 2: Find model selector and insert before its container
+  // Strategy 1: Insert between chat-input and the toolbar row (+ | Opus 4.7)
+  // Find the model selector toolbar row and insert the strip BEFORE it
   const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
   if (modelSelector) {
-    let anchor = modelSelector;
-    // Walk up to find a reasonable container
-    for (let i = 0; i < 5; i++) {
-      if (anchor.parentElement) anchor = anchor.parentElement;
+    // Walk up to find the toolbar row containing + and model selector
+    let toolbarRow = modelSelector.closest('[class]');
+    let el = modelSelector.parentElement;
+    while (el) {
+      const style = window.getComputedStyle(el);
+      if (style.display === 'flex' && el.querySelector(SELECTORS.MODEL_SELECTOR)) {
+        toolbarRow = el;
+        break;
+      }
+      el = el.parentElement;
     }
-    const strip = getBarStripElement() || createBarStrip();
-    anchor.parentElement.insertBefore(strip, anchor);
+    if (toolbarRow && toolbarRow.parentElement) {
+      toolbarRow.parentElement.insertBefore(strip, toolbarRow);
+      stripInjected = true;
+      renderAll();
+      console.log('[ClaudeMonitor] Strip injected above toolbar row');
+      return;
+    }
+  }
+
+  // Strategy 2: Insert after chat-input div
+  const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
+  if (chatInput) {
+    chatInput.after(strip);
     stripInjected = true;
     renderAll();
-    console.log('[ClaudeMonitor] Bar strip injected near model selector');
+    console.log('[ClaudeMonitor] Strip injected after chat input');
     return;
   }
 
-  // Strategy 3: Find the ProseMirror editor
+  // Strategy 3: Find ProseMirror editor container
   const editor = document.querySelector('.ProseMirror, .tiptap');
   if (editor) {
     let container = editor;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       if (container.parentElement) container = container.parentElement;
     }
-    const strip = getBarStripElement() || createBarStrip();
-    container.parentElement.insertBefore(strip, container);
+    container.after(strip);
     stripInjected = true;
     renderAll();
-    console.log('[ClaudeMonitor] Bar strip injected near editor');
+    console.log('[ClaudeMonitor] Strip injected after editor container');
     return;
   }
 
