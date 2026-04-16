@@ -13,6 +13,7 @@ import {
   updateWeekly,
   updateModel,
   updateBudget,
+  updateCost,
   updateResetCountdown,
   updateHistory,
   markResponseReceived,
@@ -25,51 +26,24 @@ function injectBarStrip() {
 
   const strip = getBarStripElement() || createBarStrip();
 
-  // Strategy 1: Insert between chat-input and the toolbar row (+ | Opus 4.7)
-  // Find the model selector toolbar row and insert the strip BEFORE it
+  // Strategy 1: Insert INSIDE the toolbar row, between + button and Opus selector
   const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
   if (modelSelector) {
-    // Walk up to find the toolbar row containing + and model selector
-    let toolbarRow = modelSelector.closest('[class]');
-    let el = modelSelector.parentElement;
-    while (el) {
-      const style = window.getComputedStyle(el);
-      if (style.display === 'flex' && el.querySelector(SELECTORS.MODEL_SELECTOR)) {
-        toolbarRow = el;
-        break;
-      }
-      el = el.parentElement;
-    }
-    if (toolbarRow && toolbarRow.parentElement) {
-      toolbarRow.parentElement.insertBefore(strip, toolbarRow);
-      stripInjected = true;
-      renderAll();
-      console.log('[ClaudeMonitor] Strip injected above toolbar row');
-      return;
-    }
+    // Insert right before the model selector
+    modelSelector.parentElement.insertBefore(strip, modelSelector);
+    stripInjected = true;
+    renderAll();
+    console.log('[ClaudeMonitor] Strip injected in toolbar row');
+    return;
   }
 
-  // Strategy 2: Insert after chat-input div
+  // Strategy 2: Find chat-input and insert after it
   const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
   if (chatInput) {
     chatInput.after(strip);
     stripInjected = true;
     renderAll();
     console.log('[ClaudeMonitor] Strip injected after chat input');
-    return;
-  }
-
-  // Strategy 3: Find ProseMirror editor container
-  const editor = document.querySelector('.ProseMirror, .tiptap');
-  if (editor) {
-    let container = editor;
-    for (let i = 0; i < 3; i++) {
-      if (container.parentElement) container = container.parentElement;
-    }
-    container.after(strip);
-    stripInjected = true;
-    renderAll();
-    console.log('[ClaudeMonitor] Strip injected after editor container');
     return;
   }
 
@@ -84,12 +58,9 @@ function renderAll() {
   const history = getHistoryState();
 
   updateTokens(tokens.estimatedTokens, model.contextLimit);
-  updateSession(usage.session.utilization, usage.session.resetsAt);
-  updateWeekly(usage.weekly.utilization, usage.weekly.resetsAt);
-  updateModel(model.modelLabel);
-  updateBudget(budget.enabled, budget.currentUsage, budget.monthlyBudget, budget.alertLevel);
-  updateResetCountdown(usage.session.resetsAt, usage.weekly.resetsAt);
-  updateHistory(history.entries);
+  updateSession(usage.session.utilization);
+  updateCost(usage.session.utilization, usage.weekly.utilization);
+  updateResetCountdown(usage.session.resetsAt);
 }
 
 function observeStripRemoval() {
@@ -154,9 +125,9 @@ async function init() {
   await initHistoryStore();
 
   onUsageChange((usage) => {
-    updateSession(usage.session.utilization, usage.session.resetsAt);
-    updateWeekly(usage.weekly.utilization, usage.weekly.resetsAt);
-    updateResetCountdown(usage.session.resetsAt, usage.weekly.resetsAt);
+    updateSession(usage.session.utilization);
+    updateCost(usage.session.utilization, usage.weekly.utilization);
+    updateResetCountdown(usage.session.resetsAt);
 
     if (usage.session.resetsAt) {
       chrome.runtime.sendMessage({
