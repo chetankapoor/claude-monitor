@@ -1,0 +1,100 @@
+/* Claude Monitor — injected bar strip styles */
+/* All classes prefixed with cm- to avoid conflicts */
+
+.cm-bar-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  border-top: 1px solid var(--cm-border, rgba(255,255,255,0.08));
+  user-select: none;
+}
+
+.cm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cm-label {
+  color: var(--cm-text-muted, #999);
+  min-width: 48px;
+  font-size: 10px;
+}
+
+.cm-bar-track {
+  flex: 1;
+  height: 4px;
+  background: var(--cm-track, rgba(255,255,255,0.08));
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.cm-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.cm-bar-fill--tokens { background: #7c6bd4; }
+.cm-bar-fill--session { background: #d4956b; }
+.cm-bar-fill--weekly { background: #6bd49a; }
+
+.cm-value {
+  color: var(--cm-text, #ccc);
+  min-width: 52px;
+  text-align: right;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cm-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--cm-text-muted, #666);
+  padding-top: 2px;
+}
+
+.cm-meta-row span {
+  font-variant-numeric: tabular-nums;
+}
+
+.cm-bar-fill--budget-warning { background: #d4c56b; }
+.cm-bar-fill--budget-critical { background: #d46b6b; }
+
+.cm-sparkline {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: var(--cm-bg, #1e1e1e);
+  border: 1px solid var(--cm-border, rgba(255,255,255,0.08));
+  border-radius: 6px;
+  padding: 8px;
+  z-index: 1000;
+}
+
+.cm-bar-strip:hover .cm-sparkline {
+  display: block;
+}
+
+.cm-bar-strip {
+  --cm-bg: #1e1e1e;
+  --cm-border: rgba(255,255,255,0.08);
+  --cm-track: rgba(255,255,255,0.08);
+  --cm-text: #ccc;
+  --cm-text-muted: #888;
+}
+
+html[data-mode="light"] .cm-bar-strip,
+html[data-theme="light"] .cm-bar-strip {
+  --cm-bg: #ffffff;
+  --cm-border: rgba(0,0,0,0.1);
+  --cm-track: rgba(0,0,0,0.08);
+  --cm-text: #333;
+  --cm-text-muted: #888;
+}
