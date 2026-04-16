@@ -1,0 +1,18 @@
+Claude Monitor adds real-time usage tracking directly into the claude.ai interface.
+
+Features:
+• Token Counter — approximate token usage vs 200k context limit
+• Session Usage — 5-hour rolling rate limit utilization
+• Weekly Usage — 7-day rolling usage percentage
+• Cache Timer — countdown showing when conversation cache expires
+• Budget Tracker — set monthly usage budgets with alerts
+• Reset Countdown — know exactly when rate limits reset
+• Usage History — track daily usage trends over 30 days
+• Model Indicator — see which Claude model is active
+
+Privacy-first:
+• Runs entirely locally — no external servers
+• No analytics or telemetry
+• Open source (MIT license)
+
+Works with all Claude plans: Pro, Max, Team, and Enterprise.
