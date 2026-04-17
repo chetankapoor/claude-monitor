@@ -2,10 +2,11 @@
 /* All classes prefixed with cm- to avoid conflicts */
 
 .cm-strip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: 0 6px;
+  padding: 6px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 11px;
   user-select: none;
@@ -13,7 +14,8 @@
   font-variant-numeric: tabular-nums;
   position: relative;
   white-space: nowrap;
-  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cm-item {
@@ -43,8 +45,8 @@
 
 /* ── Mini progress bar ── */
 .cm-mini-bar {
-  width: 70px;
-  height: 12px;
+  width: 80px;
+  height: 14px;
   background: rgba(217,119,87,0.12);
   border-radius: 7px;
   border: 1.5px solid rgba(217,119,87,0.4);

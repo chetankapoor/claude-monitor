@@ -26,45 +26,35 @@ function injectBarStrip() {
 
   const strip = getBarStripElement() || createBarStrip();
 
-  // Find the + button and model selector — they share a common ancestor toolbar row
+  // Find the chat-input container — the strip sits inside it,
+  // between the textarea and the toolbar row (+ / Opus), matching its width
+  const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
   const fileUpload = document.querySelector('[data-testid="file-upload"]');
-  const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
 
-  if (fileUpload && modelSelector) {
-    // Find their lowest common ancestor — that's the toolbar row
-    const fileAncestors = [];
-    let el = fileUpload;
-    while (el) { fileAncestors.push(el); el = el.parentElement; }
-
-    let toolbarRow = modelSelector;
-    while (toolbarRow) {
-      if (fileAncestors.includes(toolbarRow)) break;
+  if (chatInput && fileUpload) {
+    // The toolbar row with + and Opus is a sibling or nearby element
+    // Walk up from file-upload to find the toolbar row inside the chat container
+    let toolbarRow = fileUpload;
+    while (toolbarRow && toolbarRow.parentElement) {
+      // Stop when we reach the same parent as chat-input or its container
+      if (toolbarRow.parentElement === chatInput.parentElement ||
+          toolbarRow.parentElement === chatInput) {
+        break;
+      }
       toolbarRow = toolbarRow.parentElement;
     }
 
-    if (toolbarRow) {
-      // Find the direct child of toolbarRow that contains the model selector (right group)
-      let rightGroup = modelSelector;
-      while (rightGroup.parentElement !== toolbarRow) {
-        rightGroup = rightGroup.parentElement;
-      }
-
-      // Insert strip right before the right group
-      toolbarRow.insertBefore(strip, rightGroup);
-
-      // Make strip fill the middle space
-      strip.style.flex = '1';
-      strip.style.justifyContent = 'center';
-
+    // Insert strip right before the toolbar row
+    if (toolbarRow && toolbarRow.parentElement) {
+      toolbarRow.parentElement.insertBefore(strip, toolbarRow);
       stripInjected = true;
       renderAll();
-      console.log('[ClaudeMonitor] Strip injected in toolbar between + and Opus');
+      console.log('[ClaudeMonitor] Strip injected above toolbar, inside chat container');
       return;
     }
   }
 
   // Fallback: insert after chat-input
-  const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
   if (chatInput) {
     chatInput.after(strip);
     stripInjected = true;
