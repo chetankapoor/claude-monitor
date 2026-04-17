@@ -26,41 +26,43 @@ function injectBarStrip() {
 
   const strip = getBarStripElement() || createBarStrip();
 
-  // Find the chat-input container — the strip sits inside it,
-  // between the textarea and the toolbar row (+ / Opus), matching its width
-  const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
+  // Goal: inject strip INLINE on the same row as + and Opus 4.7
   const fileUpload = document.querySelector('[data-testid="file-upload"]');
+  const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
 
-  if (chatInput && fileUpload) {
-    // The toolbar row with + and Opus is a sibling or nearby element
-    // Walk up from file-upload to find the toolbar row inside the chat container
-    let toolbarRow = fileUpload;
-    while (toolbarRow && toolbarRow.parentElement) {
-      // Stop when we reach the same parent as chat-input or its container
-      if (toolbarRow.parentElement === chatInput.parentElement ||
-          toolbarRow.parentElement === chatInput) {
-        break;
-      }
+  if (fileUpload && modelSelector) {
+    // Find their lowest common ancestor — that's the toolbar row
+    const ancestors = new Set();
+    let el = fileUpload;
+    while (el) { ancestors.add(el); el = el.parentElement; }
+
+    let toolbarRow = modelSelector;
+    while (toolbarRow) {
+      if (ancestors.has(toolbarRow)) break;
       toolbarRow = toolbarRow.parentElement;
     }
 
-    // Insert strip right before the toolbar row
-    if (toolbarRow && toolbarRow.parentElement) {
-      toolbarRow.parentElement.insertBefore(strip, toolbarRow);
+    if (toolbarRow) {
+      // Find the direct children that contain + (left) and Opus (right)
+      let leftGroup = fileUpload;
+      while (leftGroup.parentElement !== toolbarRow) leftGroup = leftGroup.parentElement;
+
+      let rightGroup = modelSelector;
+      while (rightGroup.parentElement !== toolbarRow) rightGroup = rightGroup.parentElement;
+
+      // Insert strip between left and right groups
+      // If they're the same element, insert after it
+      if (leftGroup !== rightGroup && leftGroup.nextSibling) {
+        toolbarRow.insertBefore(strip, leftGroup.nextSibling);
+      } else {
+        toolbarRow.insertBefore(strip, rightGroup);
+      }
+
       stripInjected = true;
       renderAll();
-      console.log('[ClaudeMonitor] Strip injected above toolbar, inside chat container');
+      console.log('[ClaudeMonitor] Strip injected inline between + and Opus');
       return;
     }
-  }
-
-  // Fallback: insert after chat-input
-  if (chatInput) {
-    chatInput.after(strip);
-    stripInjected = true;
-    renderAll();
-    console.log('[ClaudeMonitor] Strip injected after chat input');
-    return;
   }
 
   console.warn('[ClaudeMonitor] Could not find injection point');
