@@ -19,39 +19,43 @@
 .cm-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   white-space: nowrap;
 }
 
 .cm-item-label {
-  color: var(--cm-text-muted, #888);
+  color: var(--cm-text-muted, #999);
   font-size: 10px;
+  letter-spacing: 0.02em;
 }
 
 .cm-item-value {
-  color: var(--cm-text, #ccc);
+  color: var(--cm-text, #e0e0e0);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .cm-sep {
-  color: var(--cm-border, rgba(255,255,255,0.15));
-  margin: 0 4px;
-  font-size: 10px;
+  color: rgba(255,255,255,0.12);
+  margin: 0 6px;
+  font-size: 9px;
 }
 
-/* Inline mini bar — rounded pill with border and glow */
+/* ── Mini progress bar ── */
 .cm-mini-bar {
-  width: 48px;
-  height: 8px;
-  background: transparent;
-  border-radius: 5px;
-  border: 1px solid rgba(255,255,255,0.5);
-  display: inline-block;
+  width: 56px;
+  height: 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  display: inline-flex;
+  align-items: center;
   vertical-align: middle;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 4px rgba(255,255,255,0.15);
+  box-shadow:
+    0 0 6px rgba(255,255,255,0.08),
+    inset 0 1px 2px rgba(0,0,0,0.2);
 }
 
 /* 50% tick mark */
@@ -59,26 +63,35 @@
   content: '';
   position: absolute;
   left: 50%;
-  top: 0;
-  bottom: 0;
+  top: 1px;
+  bottom: 1px;
   width: 1px;
-  background: rgba(255,255,255,0.25);
-  z-index: 1;
+  background: rgba(255,255,255,0.18);
+  z-index: 2;
+  pointer-events: none;
 }
 
+/* The fill bar */
 .cm-mini-fill {
   height: 100%;
   border-radius: 4px;
-  transition: width 0.3s ease;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  min-width: 0;
 }
 
 .cm-mini-fill--tokens {
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 0 6px rgba(255,255,255,0.4);
+  background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9));
+  box-shadow:
+    0 0 8px rgba(255,255,255,0.35),
+    0 0 2px rgba(255,255,255,0.6);
 }
+
 .cm-mini-fill--session {
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 0 6px rgba(255,255,255,0.4);
+  background: linear-gradient(90deg, rgba(217,119,87,0.7), rgba(217,119,87,1));
+  box-shadow:
+    0 0 8px rgba(217,119,87,0.35),
+    0 0 2px rgba(217,119,87,0.6);
 }
 
 /* Alert colors */
@@ -86,36 +99,16 @@
 .cm-alert-critical { color: #d46b6b !important; }
 .cm-alert-expired { color: #d46b6b !important; }
 
-/* Sparkline popup on hover */
-.cm-sparkline {
-  display: none;
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--cm-bg, #2a2a2a);
-  border: 1px solid var(--cm-border, rgba(255,255,255,0.12));
-  border-radius: 6px;
-  padding: 8px 12px;
-  z-index: 10000;
-  min-width: 180px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.cm-strip:hover .cm-sparkline {
-  display: block;
-}
-
-/* Dark mode (default) */
+/* ── Dark mode (default) ── */
 .cm-strip {
   --cm-bg: #2a2a2a;
   --cm-border: rgba(255,255,255,0.1);
   --cm-track: rgba(255,255,255,0.1);
-  --cm-text: #ccc;
-  --cm-text-muted: #888;
+  --cm-text: #e0e0e0;
+  --cm-text-muted: #999;
 }
 
-/* Light mode */
+/* ── Light mode ── */
 html[data-mode="light"] .cm-strip,
 html[data-theme="light"] .cm-strip {
   --cm-bg: #f5f5f5;
@@ -127,17 +120,31 @@ html[data-theme="light"] .cm-strip {
 
 html[data-mode="light"] .cm-mini-bar,
 html[data-theme="light"] .cm-mini-bar {
-  border-color: rgba(0,0,0,0.4);
-  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.25);
+  box-shadow:
+    0 0 4px rgba(0,0,0,0.06),
+    inset 0 1px 2px rgba(0,0,0,0.08);
 }
 
 html[data-mode="light"] .cm-mini-bar::after,
 html[data-theme="light"] .cm-mini-bar::after {
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.15);
 }
 
-html[data-mode="light"] .cm-mini-fill,
-html[data-theme="light"] .cm-mini-fill {
-  background: rgba(0,0,0,0.7) !important;
-  box-shadow: none !important;
+html[data-mode="light"] .cm-mini-fill--tokens,
+html[data-theme="light"] .cm-mini-fill--tokens {
+  background: linear-gradient(90deg, rgba(0,0,0,0.45), rgba(0,0,0,0.7)) !important;
+  box-shadow: 0 0 4px rgba(0,0,0,0.15) !important;
+}
+
+html[data-mode="light"] .cm-mini-fill--session,
+html[data-theme="light"] .cm-mini-fill--session {
+  background: linear-gradient(90deg, rgba(217,119,87,0.6), rgba(217,119,87,0.9)) !important;
+  box-shadow: 0 0 4px rgba(217,119,87,0.2) !important;
+}
+
+html[data-mode="light"] .cm-sep,
+html[data-theme="light"] .cm-sep {
+  color: rgba(0,0,0,0.12);
 }
