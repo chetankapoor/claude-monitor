@@ -128,14 +128,16 @@ function startResetTicker() {
   }, 1000);
 }
 
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'alarm-fired') {
-    fetchUsage();
-  }
-  if (msg.type === 'take-snapshot') {
-    handleSnapshotAlarm();
-  }
-});
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type === 'alarm-fired') {
+      fetchUsage();
+    }
+    if (msg.type === 'take-snapshot') {
+      handleSnapshotAlarm();
+    }
+  });
+}
 
 async function init() {
   injectBridge();
@@ -155,19 +157,23 @@ async function init() {
     updateSession(usage.session.utilization);
     updateResetCountdown(usage.session.resetsAt);
 
-    if (usage.session.resetsAt) {
-      chrome.runtime.sendMessage({
-        type: 'set-alarm',
-        name: 'session-reset-check',
-        when: new Date(usage.session.resetsAt).getTime(),
-      });
-    }
-    if (usage.weekly.resetsAt) {
-      chrome.runtime.sendMessage({
-        type: 'set-alarm',
-        name: 'weekly-reset-check',
-        when: new Date(usage.weekly.resetsAt).getTime(),
-      });
+    try {
+      if (usage.session.resetsAt && chrome?.runtime?.sendMessage) {
+        chrome.runtime.sendMessage({
+          type: 'set-alarm',
+          name: 'session-reset-check',
+          when: new Date(usage.session.resetsAt).getTime(),
+        });
+      }
+      if (usage.weekly.resetsAt && chrome?.runtime?.sendMessage) {
+        chrome.runtime.sendMessage({
+          type: 'set-alarm',
+          name: 'weekly-reset-check',
+          when: new Date(usage.weekly.resetsAt).getTime(),
+        });
+      }
+    } catch (e) {
+      // Chrome runtime not available
     }
   });
 
