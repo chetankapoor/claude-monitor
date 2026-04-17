@@ -41,15 +41,18 @@
 
         for (const event of events) {
           if (event.type === 'message_limit') {
+            console.log('[ClaudeMonitor Bridge] message_limit:', JSON.stringify(event.message_limit).slice(0, 200));
             post('cm:message_limit', event.message_limit);
           }
           if (event.type === 'message_start' && event.message) {
+            console.log('[ClaudeMonitor Bridge] message_start model:', event.message.model, 'usage:', JSON.stringify(event.message.usage));
             post('cm:message_start', {
               model: event.message.model,
               usage: event.message.usage,
             });
           }
           if (event.type === 'message_delta' && event.usage) {
+            console.log('[ClaudeMonitor Bridge] message_delta usage:', JSON.stringify(event.usage));
             post('cm:message_delta', {
               usage: event.usage,
             });
@@ -66,6 +69,8 @@
     return match ? match[1] : null;
   }
 
+  console.log('[ClaudeMonitor Bridge] Fetch interceptor installed');
+
   window.fetch = async function (...args) {
     const request = args[0];
     const url = typeof request === 'string' ? request : request?.url || '';
@@ -73,6 +78,7 @@
     if (typeof url === 'string' && (url.includes('/completion') || url.includes('/retry_completion'))) {
       const method = args[1]?.method || (typeof request === 'object' ? request.method : 'GET');
       if (method === 'POST') {
+        console.log('[ClaudeMonitor Bridge] Generation started:', url.slice(-60));
         post('cm:generation_start', { url });
       }
     }
