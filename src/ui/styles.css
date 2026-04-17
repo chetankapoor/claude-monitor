@@ -43,19 +43,19 @@
 
 /* ── Mini progress bar ── */
 .cm-mini-bar {
-  width: 56px;
-  height: 10px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 6px;
-  border: 1.5px solid rgba(255,255,255,0.3);
+  width: 70px;
+  height: 12px;
+  background: rgba(217,119,87,0.12);
+  border-radius: 7px;
+  border: 1.5px solid rgba(217,119,87,0.4);
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
   position: relative;
   overflow: hidden;
   box-shadow:
-    0 0 6px rgba(255,255,255,0.08),
-    inset 0 1px 2px rgba(0,0,0,0.2);
+    0 0 6px rgba(217,119,87,0.1),
+    inset 0 1px 2px rgba(0,0,0,0.15);
 }
 
 /* 50% tick mark */
@@ -66,7 +66,7 @@
   top: 1px;
   bottom: 1px;
   width: 1px;
-  background: rgba(255,255,255,0.18);
+  background: rgba(217,119,87,0.3);
   z-index: 2;
   pointer-events: none;
 }
@@ -74,24 +74,24 @@
 /* The fill bar */
 .cm-mini-fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 5px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   min-width: 0;
 }
 
 .cm-mini-fill--tokens {
-  background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9));
+  background: linear-gradient(90deg, #C66847, #D97757, #E8956F);
   box-shadow:
-    0 0 8px rgba(255,255,255,0.35),
-    0 0 2px rgba(255,255,255,0.6);
+    0 0 8px rgba(217,119,87,0.4),
+    0 0 3px rgba(217,119,87,0.6);
 }
 
 .cm-mini-fill--session {
-  background: linear-gradient(90deg, rgba(217,119,87,0.7), rgba(217,119,87,1));
+  background: linear-gradient(90deg, #C66847, #D97757, #E8956F);
   box-shadow:
-    0 0 8px rgba(217,119,87,0.35),
-    0 0 2px rgba(217,119,87,0.6);
+    0 0 8px rgba(217,119,87,0.4),
+    0 0 3px rgba(217,119,87,0.6);
 }
 
 /* Alert colors */
@@ -120,28 +120,16 @@ html[data-theme="light"] .cm-strip {
 
 html[data-mode="light"] .cm-mini-bar,
 html[data-theme="light"] .cm-mini-bar {
-  background: rgba(0,0,0,0.04);
-  border-color: rgba(0,0,0,0.25);
+  background: rgba(217,119,87,0.08);
+  border-color: rgba(217,119,87,0.35);
   box-shadow:
-    0 0 4px rgba(0,0,0,0.06),
-    inset 0 1px 2px rgba(0,0,0,0.08);
+    0 0 4px rgba(217,119,87,0.06),
+    inset 0 1px 2px rgba(0,0,0,0.05);
 }
 
 html[data-mode="light"] .cm-mini-bar::after,
 html[data-theme="light"] .cm-mini-bar::after {
-  background: rgba(0,0,0,0.15);
-}
-
-html[data-mode="light"] .cm-mini-fill--tokens,
-html[data-theme="light"] .cm-mini-fill--tokens {
-  background: linear-gradient(90deg, rgba(0,0,0,0.45), rgba(0,0,0,0.7)) !important;
-  box-shadow: 0 0 4px rgba(0,0,0,0.15) !important;
-}
-
-html[data-mode="light"] .cm-mini-fill--session,
-html[data-theme="light"] .cm-mini-fill--session {
-  background: linear-gradient(90deg, rgba(217,119,87,0.6), rgba(217,119,87,0.9)) !important;
-  box-shadow: 0 0 4px rgba(217,119,87,0.2) !important;
+  background: rgba(217,119,87,0.25);
 }
 
 html[data-mode="light"] .cm-sep,
