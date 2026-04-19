@@ -1,5 +1,5 @@
 // Generate Claude Monitor icons
-// A Claude-style asterisk/sunburst with a bar chart in the center
+// Design: circular gauge/meter with a bar chart — unique monitoring motif
 // Run: node scripts/generate-icons.js
 
 const { createCanvas } = require('canvas');
@@ -18,71 +18,79 @@ function drawIcon(size) {
   const ctx = canvas.getContext('2d');
   const cx = size / 2;
   const cy = size / 2;
+  const r = size * 0.42;
 
-  // Clear
   ctx.clearRect(0, 0, size, size);
 
-  // Claude's brand terracotta/coral color for the sunburst
-  const petalColor = '#D97757';
-
-  // Draw Claude asterisk/sunburst petals
-  const numPetals = 8;
-  const petalLength = size * 0.38;
-  const petalWidth = size * 0.09;
-  const petalOffset = size * 0.22; // distance from center where petal starts
-
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = petalColor;
-  ctx.lineWidth = petalWidth;
-
-  for (let i = 0; i < numPetals; i++) {
-    const angle = (i * Math.PI * 2) / numPetals - Math.PI / 2;
-    const startX = cx + Math.cos(angle) * petalOffset;
-    const startY = cy + Math.sin(angle) * petalOffset;
-    const endX = cx + Math.cos(angle) * petalLength;
-    const endY = cy + Math.sin(angle) * petalLength;
-
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-  }
-
-  // Draw center circle (white background for the chart)
-  const centerRadius = size * 0.2;
+  // Background circle — dark charcoal
   ctx.beginPath();
-  ctx.arc(cx, cy, centerRadius, 0, Math.PI * 2);
-  ctx.fillStyle = '#FFFFFF';
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#2A2A2A';
   ctx.fill();
 
-  // Draw bar chart inside the circle
-  const barCount = 3;
-  const barWidth = size * 0.035;
-  const barGap = size * 0.025;
-  const barMaxHeight = size * 0.2;
-  const barHeights = [0.5, 0.8, 0.6]; // relative heights
-  const totalBarWidth = barCount * barWidth + (barCount - 1) * barGap;
-  const barStartX = cx - totalBarWidth / 2;
-  const barBaseY = cy + centerRadius * 0.5;
+  // Outer ring — terracotta
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = '#D97757';
+  ctx.lineWidth = size * 0.04;
+  ctx.stroke();
 
-  for (let i = 0; i < barCount; i++) {
+  // Arc gauge track (bottom half arc, from 150° to 390°)
+  const arcRadius = r * 0.78;
+  const startAngle = (140 * Math.PI) / 180;
+  const endAngle = (400 * Math.PI) / 180;
+  const gaugeWidth = size * 0.045;
+
+  // Track (dim)
+  ctx.beginPath();
+  ctx.arc(cx, cy, arcRadius, startAngle, endAngle);
+  ctx.strokeStyle = 'rgba(217,119,87,0.2)';
+  ctx.lineWidth = gaugeWidth;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Fill (bright terracotta — show ~65% filled)
+  const fillAngle = startAngle + (endAngle - startAngle) * 0.65;
+  ctx.beginPath();
+  ctx.arc(cx, cy, arcRadius, startAngle, fillAngle);
+  ctx.strokeStyle = '#D97757';
+  ctx.lineWidth = gaugeWidth;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Three vertical bars in the center (bar chart)
+  const barWidth = size * 0.055;
+  const barGap = size * 0.04;
+  const barHeights = [0.22, 0.35, 0.28];
+  const barColors = ['#E8956F', '#D97757', '#C66847'];
+  const totalW = barWidth * 3 + barGap * 2;
+  const barStartX = cx - totalW / 2;
+  const barBaseY = cy + size * 0.12;
+
+  for (let i = 0; i < 3; i++) {
     const x = barStartX + i * (barWidth + barGap);
-    const h = barMaxHeight * barHeights[i];
+    const h = size * barHeights[i];
     const y = barBaseY - h;
+    const br = barWidth / 2;
 
-    // Bar with gradient
-    const barColors = ['#D97757', '#C66847', '#E88868'];
-    ctx.fillStyle = barColors[i];
-
-    // Rounded top
-    const r = barWidth / 2;
     ctx.beginPath();
     ctx.moveTo(x, barBaseY);
-    ctx.lineTo(x, y + r);
-    ctx.arc(x + r, y + r, r, Math.PI, 0, false);
+    ctx.lineTo(x, y + br);
+    ctx.arc(x + br, y + br, br, Math.PI, 0, false);
     ctx.lineTo(x + barWidth, barBaseY);
     ctx.closePath();
+    ctx.fillStyle = barColors[i];
     ctx.fill();
+  }
+
+  // Small "M" letter at top of circle
+  if (size >= 48) {
+    const fontSize = size * 0.13;
+    ctx.font = `bold ${fontSize}px -apple-system, Arial, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('M', cx, cy - size * 0.22);
   }
 
   return canvas;
