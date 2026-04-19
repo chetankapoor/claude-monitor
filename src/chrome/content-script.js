@@ -21,7 +21,13 @@ import {
 
 let stripInjected = false;
 
+function isChatPage() {
+  const path = window.location.pathname;
+  return path.startsWith('/chat') || path === '/' || path === '/new';
+}
+
 function injectBarStrip() {
+  if (!isChatPage()) return;
   if (stripInjected && document.getElementById('claude-monitor-strip')) return;
 
   const strip = getBarStripElement() || createBarStrip();
@@ -34,12 +40,10 @@ function injectBarStrip() {
       if (!container) break;
       if (container.querySelector('[data-testid="file-upload"]')) {
         // This container holds both + and Opus — it's the toolbar area
-        // Find the direct child that contains the model selector
         let modelGroup = modelSelector;
         while (modelGroup.parentElement !== container) {
           modelGroup = modelGroup.parentElement;
         }
-        // Insert strip before the model selector's group
         container.insertBefore(strip, modelGroup);
         strip.style.flex = '1';
         stripInjected = true;
@@ -61,7 +65,7 @@ function injectBarStrip() {
     return;
   }
 
-  console.warn('[ClaudeMonitor] Could not find injection point');
+  // Only warn on chat pages — silence on /design, /settings, etc.
 }
 
 function renderAll() {
