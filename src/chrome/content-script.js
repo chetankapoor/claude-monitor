@@ -25,44 +25,40 @@ function injectBarStrip() {
   if (stripInjected && document.getElementById('claude-monitor-strip')) return;
 
   const strip = getBarStripElement() || createBarStrip();
-
-  // Goal: inject strip INLINE on the same row as + and Opus 4.7
-  const fileUpload = document.querySelector('[data-testid="file-upload"]');
   const modelSelector = document.querySelector(SELECTORS.MODEL_SELECTOR);
 
-  if (fileUpload && modelSelector) {
-    // Find their lowest common ancestor — that's the toolbar row
-    const ancestors = new Set();
-    let el = fileUpload;
-    while (el) { ancestors.add(el); el = el.parentElement; }
-
-    let toolbarRow = modelSelector;
-    while (toolbarRow) {
-      if (ancestors.has(toolbarRow)) break;
-      toolbarRow = toolbarRow.parentElement;
-    }
-
-    if (toolbarRow) {
-      // Find the direct children that contain + (left) and Opus (right)
-      let leftGroup = fileUpload;
-      while (leftGroup.parentElement !== toolbarRow) leftGroup = leftGroup.parentElement;
-
-      let rightGroup = modelSelector;
-      while (rightGroup.parentElement !== toolbarRow) rightGroup = rightGroup.parentElement;
-
-      // Insert strip between left and right groups
-      // If they're the same element, insert after it
-      if (leftGroup !== rightGroup && leftGroup.nextSibling) {
-        toolbarRow.insertBefore(strip, leftGroup.nextSibling);
-      } else {
-        toolbarRow.insertBefore(strip, rightGroup);
+  if (modelSelector) {
+    // Walk up from model selector to find a parent that also contains file-upload
+    let container = modelSelector.parentElement;
+    for (let i = 0; i < 15; i++) {
+      if (!container) break;
+      if (container.querySelector('[data-testid="file-upload"]')) {
+        // This container holds both + and Opus — it's the toolbar area
+        // Find the direct child that contains the model selector
+        let modelGroup = modelSelector;
+        while (modelGroup.parentElement !== container) {
+          modelGroup = modelGroup.parentElement;
+        }
+        // Insert strip before the model selector's group
+        container.insertBefore(strip, modelGroup);
+        strip.style.flex = '1';
+        stripInjected = true;
+        renderAll();
+        console.log('[ClaudeMonitor] Strip injected in toolbar');
+        return;
       }
-
-      stripInjected = true;
-      renderAll();
-      console.log('[ClaudeMonitor] Strip injected inline between + and Opus');
-      return;
+      container = container.parentElement;
     }
+  }
+
+  // Fallback: find the fieldset (chat input box) and insert after it
+  const fieldset = document.querySelector('fieldset');
+  if (fieldset) {
+    fieldset.after(strip);
+    stripInjected = true;
+    renderAll();
+    console.log('[ClaudeMonitor] Strip injected after fieldset');
+    return;
   }
 
   console.warn('[ClaudeMonitor] Could not find injection point');
